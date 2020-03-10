@@ -1,0 +1,171 @@
+# Multiple inclusion guard
+if(NOT TRIQS_FOUND)
+set(TRIQS_FOUND True)
+
+# Version
+set(TRIQS_VERSION @TRIQS_VERSION@)
+set(TRIQS_VERSION_MAJOR @TRIQS_VERSION_MAJOR@)
+set(TRIQS_VERSION_MINOR @TRIQS_VERSION_MINOR@)
+set(TRIQS_VERSION_PATCH @TRIQS_VERSION_PATCH@)
+
+set(TRIQS_GIT_HASH @TRIQS_GIT_HASH@)
+
+# The compiler used for triqs
+set(TRIQS_CXX_COMPILER @CMAKE_CXX_COMPILER@)
+set(TRIQS_CXX_COMPILER_ID @CMAKE_CXX_COMPILER_ID@)
+
+# Git executable
+set(TRIQS_GIT_EXECUTABLE @GIT_EXECUTABLE@)
+
+# Python Interpreter
+set(TRIQS_PYTHON_INTERPRETER @PYTHON_INTERPRETER@)
+set(TRIQS_PYTHON_LIB_DEST_ROOT @PYTHON_LIB_DEST_ROOT@)
+
+# MPI executable
+set(TRIQS_MPIEXEC_EXECUTABLE @MPIEXEC_EXECUTABLE@)
+set(TRIQS_MPIEXEC_NUMPROC_FLAG @MPIEXEC_NUMPROC_FLAG@)
+set(TRIQS_MPIEXEC_PREFLAGS @MPIEXEC_PREFLAGS@)
+set(TRIQS_MPIEXEC_POSTFLAGS @MPIEXEC_POSTFLAGS@)
+
+# Root of the installation
+set(TRIQS_ROOT  @CMAKE_INSTALL_PREFIX@)
+
+# Make all cmake modules installed with TRIQS available
+list(APPEND CMAKE_MODULE_PATH ${TRIQS_ROOT}/share/cmake/Modules)
+
+# True iif triqs was compiled with Python support
+set(TRIQS_WITH_PYTHON_SUPPORT @TRIQS_WITH_PYTHON_SUPPORT@)
+
+# include the exported dependencies of the triqs project
+include(@CMAKE_INSTALL_PREFIX@/lib/cmake/triqs/triqs-dependencies.cmake)
+
+# include the exported targets of this project 
+include(@CMAKE_INSTALL_PREFIX@/lib/cmake/cpp2py/cpp2py-targets.cmake)
+include(@CMAKE_INSTALL_PREFIX@/lib/cmake/triqs/triqs-targets.cmake)
+
+MESSAGE(STATUS "Found TRIQSConfig.cmake with version ${TRIQS_VERSION}, hash = ${TRIQS_GIT_HASH}")
+
+# Check compiler
+if(NOT CMAKE_CXX_COMPILER STREQUAL TRIQS_CXX_COMPILER)
+  message(FATAL_ERROR "For your own safety, you should use the same compiler as the one used to compile TRIQS!\n  -- CMAKE_CXX_COMPILER: ${CMAKE_CXX_COMPILER}\n  -- TRIQS_CXX_COMPILER: ${TRIQS_CXX_COMPILER}")
+endif()
+
+# Documentation
+set(TRIQS_WITH_DOCUMENTATION @Build_Documentation@)
+set(TRIQS_SPHINXBUILD_EXECUTABLE @SPHINXBUILD_EXECUTABLE@)
+set(TRIQS_SPHINXEXT_PATH @CMAKE_INSTALL_PREFIX@/share/triqs/sphinxext)
+set(TRIQS_THEMES_PATH @CMAKE_INSTALL_PREFIX@/share/triqs/themes)
+set(TRIQS_MATHJAX_PATH @MATHJAX_PATH@)
+
+set(TRIQS_SPHINXEXT_PATH         @CMAKE_INSTALL_PREFIX@/share/triqs/sphinxext)
+set(TRIQS_SPHINX_INVENTORY_DIR   @CMAKE_INSTALL_PREFIX@/share/doc/triqs)
+
+# ---------------------------------
+# Resolve Clang Linktime Problems
+# CMake will adjust any linker flags from '-L path_to/mylib.so' to -lmylib
+# if the proper mylib.so is automatically found by the linker, i.e.
+# the directory comes first in LIBRARY_PATH.
+# The clang linker however ignores LIBRARY_PATH.
+# We thus explicitly add the content of LIBRARY_PATH to the LDFLAGS
+# FIXME For future cmake versions we should populate the
+# INTERFACE_LINK_DIRECTORIES of the triqs target
+# ---------------------------------
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" AND DEFINED ENV{LIBRARY_PATH})
+  string(REPLACE ":" ";" LINK_DIRS $ENV{LIBRARY_PATH})
+  foreach(dir ${LINK_DIRS})
+    string(APPEND CMAKE_SHARED_LINKER_FLAGS " -L${dir}")
+    string(APPEND CMAKE_MODULE_LINKER_FLAGS " -L${dir}")
+    string(APPEND CMAKE_EXE_LINKER_FLAGS " -L${dir}")
+  endforeach()
+endif()
+
+##########################################################################
+#
+# Git
+#
+##########################################################################
+macro(triqs_get_git_hash_of_source_dir VAR)
+ execute_process(COMMAND @GIT_EXECUTABLE@ rev-parse HEAD
+  WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+  OUTPUT_VARIABLE   "${VAR}"
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+endmacro()
+
+##################################################################################
+#
+#            triqs_set_rpath_for_all_targets
+#
+#   Set up the rpath for every installed and built libraries
+#
+###################################################################################
+
+macro (triqs_set_rpath_for_all_targets)
+ set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
+ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set(CMAKE_INSTALL_NAME_DIR "${CMAKE_INSTALL_PREFIX}/lib")
+  set(CMAKE_MACOSX_RPATH 1) # new for cmake 3.x
+ else()
+  set(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/lib")
+  set(CMAKE_SKIP_BUILD_RPATH FALSE)
+  set(CMAKE_BUILD_WITH_INSTALL_RPATH FALSE)
+ endif()
+
+endmacro()
+
+###################################################################################
+#
+#            triqs_set_rpath_for_target
+#
+#   Set up the rpath for a given target
+#
+###################################################################################
+
+macro (triqs_set_rpath_for_target Target)
+ if(NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+  set_target_properties(${Target} PROPERTIES INSTALL_NAME_DIR            @CMAKE_INSTALL_PREFIX@/lib)
+  set_target_properties(${Target} PROPERTIES INSTALL_RPATH               @CMAKE_INSTALL_PREFIX@/lib)
+  set_target_properties(${Target} PROPERTIES INSTALL_RPATH_USE_LINK_PATH TRUE)
+ endif()
+ set_target_properties(${Target} PROPERTIES BUILD_WITH_INSTALL_RPATH FALSE)
+ set_target_properties(${Target} PROPERTIES SKIP_BUILD_RPATH FALSE)
+ set_target_properties(${Target} PROPERTIES SKIP_INSTALL_RPATH FALSE)
+endmacro()
+
+
+################### triqs_build_f2py_module  ###################
+#
+# This macro builds the f2py module
+#   - target_name
+#   -
+#################################################################
+macro (triqs_build_f2py_module target_name modulename module_pyf_name filelist1)
+
+ set(filelist ${filelist1}  ${ARGN})
+ set(filename temp_script.py)
+ # Copy all the files
+ EXECUTE_PROCESS(COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/${module_pyf_name} ${CMAKE_CURRENT_BINARY_DIR} )
+ FOREACH( f ${filelist})
+  EXECUTE_PROCESS(COMMAND cp ${CMAKE_CURRENT_SOURCE_DIR}/${f} ${CMAKE_CURRENT_BINARY_DIR} )
+ ENDFOREACH(f)
+ # write the script that will build the f2py extension
+ SET(filename ${CMAKE_CURRENT_BINARY_DIR}/${filename} )
+ FILE(WRITE ${filename} "import sys\n")
+ FILE(APPEND ${filename} "from numpy.f2py import main\n")
+ FILE(APPEND ${filename} "sys.argv = [''] +'-c --f77exec=${CMAKE_Fortran_COMPILER} --f90exec=${CMAKE_Fortran_COMPILER} -m ${modulename} ${modulename}.pyf ${filelist} -llapack'.split()\n")
+ FILE(APPEND ${filename} "main()\n")
+
+ # We had the normal target of the module
+ add_custom_target(${target_name} ALL DEPENDS ${modulename}.so)
+
+ # TODO : to be corrected with the filelist is more than one file.
+ # ... and a special target to build vertex.so, that depends on the sources files
+ add_custom_command(OUTPUT  ${modulename}.so
+  COMMAND echo See `pwd`/f2pyBuild.log for logs
+  COMMAND ${TRIQS_PYTHON_INTERPRETER} temp_script.py > f2pyBuild.log 2>&1
+  DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${filelist} ${CMAKE_CURRENT_SOURCE_DIR}/${module_pyf_name}
+  )
+
+endmacro (triqs_build_f2py_module)
+
+endif (NOT TRIQS_FOUND) 

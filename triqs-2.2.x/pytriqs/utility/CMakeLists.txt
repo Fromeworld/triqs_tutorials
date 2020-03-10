@@ -1,0 +1,17 @@
+
+SET(PYTHON_SOURCES 
+  ${CMAKE_CURRENT_SOURCE_DIR}/__init__.py
+  ${CMAKE_CURRENT_SOURCE_DIR}/dichotomy.py
+  ${CMAKE_CURRENT_SOURCE_DIR}/bound_and_bisect.py
+  ${CMAKE_CURRENT_SOURCE_DIR}/dist_on_nodes.py
+  ${CMAKE_CURRENT_SOURCE_DIR}/h5diff.py
+  ${CMAKE_CURRENT_BINARY_DIR}/mpi.py
+  ${CMAKE_CURRENT_BINARY_DIR}/mpi_mpi4py.py
+  ${CMAKE_CURRENT_BINARY_DIR}/mpi_boost.py
+  ${CMAKE_CURRENT_SOURCE_DIR}/redirect.py
+  ${CMAKE_CURRENT_SOURCE_DIR}/capture_stdout.py
+  ${CMAKE_CURRENT_SOURCE_DIR}/comparison_tests.py
+)
+
+install (FILES ${PYTHON_SOURCES} DESTINATION ${TRIQS_PYTHON_LIB_DEST}/utility)
+

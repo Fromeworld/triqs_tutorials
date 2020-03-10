@@ -1,0 +1,35 @@
+TRIQS: a Toolbox for Research in Interacting Quantum Systems
+
+Copyright (C) 2011-2018, M. Ferrero, O. Parcollet
+Copyright (C) 2018-2019, The Simons Foundation
+All rights reserved.
+
+TRIQS is free software: you can redistribute it and/or modify it under the
+terms of the Licenses listed below.
+ 
+TRIQS is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
+PARTICULAR PURPOSE.
+
+The TRIQS repository and source distributions bundle several libraries that are
+compatibly licensed.  We list the licenses and the associated files here.
+
+Name: triqs
+Files: triqs/* pytriqs/* test/* doc/* edit_tools/* packaging/* porting_tools/*
+License: GNU GENERAL PUBLIC LICENSE Version 3
+  For details, see COPYING.txt or <https://www.gnu.org/licenses/gpl.txt>
+
+Name: cpp2py
+Files: cpp2py/*
+License: Apache License Version 2.0
+  For details, see cpp2py/COPYING.txt or <https://www.apache.org/licenses/LICENSE-2.0.txt>
+
+Name: itertools
+Files: itertools/*
+License: Apache License Version 2.0
+  For details, see itertools/LICENSE.txt or <https://www.apache.org/licenses/LICENSE-2.0.txt>
+
+Name: mpi
+Files: mpi/*
+License: Apache License Version 2.0
+  For details, see mpi/LICENSE.txt or <https://www.apache.org/licenses/LICENSE-2.0.txt>

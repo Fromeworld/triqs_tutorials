@@ -1,0 +1,40 @@
+FROM ubuntu:bionic
+ARG RELEASE=bionic
+ARG LLVM=6.0
+
+# This platform includes dependencies for building docs
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y \
+      clang-${LLVM} \
+      cmake \
+      g++ \
+      gfortran \
+      git \
+      hdf5-tools \
+      libblas-dev \
+      libboost-all-dev \
+      libclang-${LLVM}-dev \
+      libc++-dev \
+      libc++abi-dev \
+      libfftw3-dev \
+      libgfortran3 \
+      libgmp-dev \
+      libhdf5-dev \
+      liblapack-dev \
+      libopenmpi-dev \
+      openmpi-bin \
+      openmpi-common \
+      openmpi-doc \
+      python-clang-${LLVM} \
+      python-dev \
+      python-h5py \
+      python-mako \
+      python-matplotlib \
+      python-mpi4py \
+      python-numpy \
+      python-pip \
+      python-scipy \
+      python-sphinx \
+      python-nbsphinx
+
+ENV CC=clang-${LLVM} CXX=clang++-${LLVM} CXXFLAGS="-stdlib=libc++"
+RUN update-alternatives --install /usr/bin/clang clang /usr/bin/clang-${LLVM} 60 --slave /usr/bin/clang++ clang++ /usr/bin/clang++-${LLVM} --slave /usr/bin/clang-cpp clang-cpp /usr/bin/clang-cpp-${LLVM}
